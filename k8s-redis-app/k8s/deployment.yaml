@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodeapp-deployment
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodeapp
+  
+  template:
+    metadata:
+      labels:
+        app: nodeapp
+    
+    spec:
+      containers:
+        - name: nodeapp
+          image: mynode-redis-app:1.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: REDIS_HOST
+              value: "redis-service"
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeapp-service
+spec:
+  type: NodePort
+  selector:
+    app: nodeapp
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30008

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-mongo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-mongo-app
+
+  template:
+    metadata:
+      labels:
+        app: node-mongo-app
+    spec:
+      containers:
+        - name: node-mongo-app
+          image: node-mongo-app:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MONGO_URL
+              value: "mongodb://mongo-service:27017/testdb"
