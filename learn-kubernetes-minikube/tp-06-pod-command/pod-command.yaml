@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-command
+spec:
+  containers: 
+    - name: main-container
+      image: busybox:latest
+      command: ['/bin/sh']
+      args: ['-c', 'echo "Le pod a démarré!" && for i in $(seq 1 100); do echo "Message $i"; sleep 2; done']
+      restartPolicy: Never
