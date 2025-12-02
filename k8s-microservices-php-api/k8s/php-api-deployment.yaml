@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-app
+  namespace: microservices-demo
+spec: 
+  selector:
+    matchLabels:
+      app: php-app
+  template:
+    metadata:
+      labels:
+        app: php-app
+    spec:
+      containers:
+        - name: php-app
+          image: php-micro:1.0
+          ports:
+            - containerPort: 80   # ✅ corriger ici
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-app-service
+  namespace: microservices-demo
+spec:
+  selector: 
+    app: php-app
+  ports:
+    - port: 80                  # ✅ corriger ici
+      targetPort: 80
+      protocol: TCP

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: analytics-app
+  namespace: analytics-ns
+  labels:
+    app: analytics
+spec:
+  containers:
+    - name: analytics
+      image: hashicorp/http-echo:0.2.3
+      args: ["-text=Hello Analytics", "-listen=:8082"]
+      ports:
+        - containerPort: 8082
+
+    - name: curl
+      image: curlimages/curl:8.10.1
+      command: ["sleep", "3600"]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics
+  namespace: analytics-ns
+spec:
+  selector:
+    app: analytics
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+      

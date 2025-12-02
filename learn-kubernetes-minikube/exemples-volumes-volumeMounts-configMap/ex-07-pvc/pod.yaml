@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pvc
+spec:
+  containers:
+    - name: app
+      image: busybox
+      volumeMounts:
+        - name: data
+          mountPath: /data
+
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: mypvc
+        

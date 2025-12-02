@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-db
+  labels:
+    app: postgres
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: postgres
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: postgres
+        tier: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+              name: database
+            - containerPort: 9187
+              name: metrics
+          env:
+            - name: POSTGRES_DB
+              value: "mydb"
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              value: "password123"
+            - name: POSTGRES_METRICS_PORT
+              value: "9187"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  selector:
+    app: postgres
+    tier: database
+  ports:
+    - name: database
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+    - name: metrics
+      protocol: TCP
+      port: 9187
+      targetPort: 9187
+  type: ClusterIP

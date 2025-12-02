@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest-api
+  namespace: monitoring-project
+  labels:
+    app: rest-api
+    tier: backend
+spec: 
+  replicas: 2
+  selector: 
+    matchLabels:
+      app: rest-api
+  template:
+    metadata:
+      labels:
+        app: rest-api
+        tier: backend
+    spec:
+      containers:
+        - name: api
+          image: node:18-alpine
+          workingDir: /app
+          ports: 
+            - containerPort: 3000
+          env:
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: daabase-url
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: api-key
+            - name: NODE_ENV
+              value: "production"
+          command: ['node', 'server.js']
+          volumeMounts:
+            - name: app-code
+              mountPath: /app
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+      volumes:
+        - name: app-code
+          configMap:
+            name: app-config
+

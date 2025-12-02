@@ -1,0 +1,15 @@
+{
+    "name": "fedora/php-api",
+    "autoload": {
+        "psr-4": {
+            "Fedora\\PhpApi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ahmedalimouhamed",
+            "email": "zerzif.bouchaib@gmail.com"
+        }
+    ],
+    "require": {}
+}

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+  namespace: projet-debutant
+spec: 
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels: 
+        app: wordpress
+    spec:
+      containers:
+        - image: wordpress:6.3
+          name: wordpress
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: "mysql-service:3306"
+            - name: WORDPRESS_DB_USER
+              value: "root"
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+            - name: WORDPRESS_DB_NAME
+              value: "wordpress"
+          ports:
+            - containerPort: 80
+              name: wordpress
+
+
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: wordpress-service
+  namespace: projet-debutant
+spec:
+  selector:
+    app: wordpress
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+  

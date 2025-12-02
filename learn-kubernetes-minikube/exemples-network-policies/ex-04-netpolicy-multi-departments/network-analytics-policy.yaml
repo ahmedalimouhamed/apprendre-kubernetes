@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-to-analytics
+  namespace: analytics-ns
+spec:
+  podSelector:
+    matchLabels:
+      app: analytics
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              purpose: backend
+      ports:
+        - protocol: TCP
+          port: 8082

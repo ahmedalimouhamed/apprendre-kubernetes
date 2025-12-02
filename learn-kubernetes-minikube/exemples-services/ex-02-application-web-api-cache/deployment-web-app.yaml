@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: web
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          env:
+            - name: BACKEND_API_URL
+              value: "http://backend-service:8080/api"
+            - name: REDIS_URL
+              value: "redis-service:6379"
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels: 
+    app: backend
+    tier: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+      tier: api
+  template:
+    metadata:
+      labels: 
+        app: backend
+        tier: api
+    spec:
+      containers:
+        - name: api
+          image: node:18-alpine
+          ports:
+            - containerPort: 8080
+          command: ["/bin/sh"]
+          args: ["-c", "while true; do echo 'API server Ready on port 8080'; sleep 3600; done"]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: redis
+  labels:
+    app: redis
+    tier: cache
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: redis
+      tier: cache
+  template:
+    metadata:
+      labels:
+        app: redis
+        tier: cache
+    spec: 
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379

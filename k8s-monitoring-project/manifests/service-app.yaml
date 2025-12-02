@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: monitoring-project
+  labels:
+    app: web-app
+spec: 
+  selector: 
+    app: web-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: ClusterIP

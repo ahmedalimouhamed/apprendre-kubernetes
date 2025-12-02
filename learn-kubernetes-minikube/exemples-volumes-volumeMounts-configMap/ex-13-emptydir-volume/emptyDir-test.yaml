@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: chat-pod
+spec:
+  containers:
+    - name: writer
+      image: busybox
+      command: ["sh", "-c"]
+      args: 
+        - |
+          echo "Démarrage du writer..." > /shared/status.txt
+          for i in $(seq 1 10); do
+            echo "Message $i: $(date)" >> /shared/messages.txt
+            sleep 2
+          done
+      volumeMounts:
+        - name: shared-vol
+          mountPath: /shared
+
+    - name: reader
+      image: busybox
+      command: ["sh", "-c"]
+      args: 
+        - |
+          echo "Lecture en attente..." > /shared/reader-status.txt
+          while [ ! -f /shared/messages.txt ]; do
+            sleep 1
+          done
+
+          echo "=== Début de la lecture ==="
+          tail -f /shared/messages.txt
+      volumeMounts:
+        - name: shared-vol
+          mountPath: /shared
+
+  volumes:
+    - name: shared-vol
+      emptyDir: {}

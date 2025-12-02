@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: demo-netpol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: echo 
+          image: hashicorp/http-echo:0.2.3
+          args: ["-text=Hello from frontend", "-listen=:8081"]
+          ports:
+            - containerPort: 8081

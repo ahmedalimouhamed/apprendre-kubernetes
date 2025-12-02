@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  app.properties: |
+    server.port=8081
+    database.host=postgres
+    database.port=5432
+    cache.enabled=true
+
+  logging.properties: |
+    log.level=INFO
+    log.path=/var/log/app
+    max.size=100MB
+
+  index.html: |
+    <html>
+      <head>
+        <title>App Config</title>
+      </head>
+      <body>
+        <h1>App Config</h1>
+      </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name localhost;
+
+      location / {
+        root /usr/share/nginx/html;
+        index index.html;
+      }
+
+      location /config {
+        alias /etc/app-config;
+        autoindex on;
+      }
+    }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap-app
+spec:
+  containers:
+    - name: web-server
+      image: nginx:alpine
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+
+        - name: html-volume
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+
+        - name: app-config-volume
+          mountPath: /etc/app-config
+
+  volumes:
+    - name: nginx-conf
+      configMap:
+        name: nginx-config
+        items:
+          - key: default.conf
+            path: default.conf
+
+    - name: html-volume
+      configMap:
+        name: app-config
+        items:
+          - key: index.html
+            path: index.html
+
+    - name: app-config-volume
+      configMap:
+        name: app-config

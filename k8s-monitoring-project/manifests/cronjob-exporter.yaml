@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata: 
+  name: metrics-exporter
+  namespace: monitoring-project
+spec:
+  # Exécution toutes les 5 minutes
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: exporter
+              image: bitnami/kubectl:latest
+              command: 
+                - /bin/sh
+                - -c
+                - |
+                  # Récupération des métriques des pods
+                  kubectl get pods -n monitoring-project -o json > /tmp/pods.json
+                  kubectl top pods -n monitoring-project --no-headers > /tmp/usage.txt
+
+                  # Création d'un rapport JSON
+                  {
+                    echo "{"
+                    echo "\"timestamp\": \"$(date -Iseconds)\","
+                    echo "\"cluster_metrics\": {"
+                    echo "\"pods_count\": $(kubectl get pods -n monitoring-project --no-headers | wc -l),"
+                    echo "\"healthy_pods\": $(kubectl get pods -n monitoring-project --no-headers | grep -c Running)"
+                    echo "}"
+                    echo "}"
+                  } > /tmp/metrics.json
+
+                  # Affichage du rapport
+                  cat /tmp/metrics.json
+              volumeMounts:
+                - name: kubeconfig
+                  mountPath: /root/.kube
+          
+          restartPolicy: OnFailure
+          volumes:
+            - name: kubeconfig
+              hostPath:
+                path: /root/.kube

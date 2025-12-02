@@ -1,0 +1,96 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-pv
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /data/local-pv
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube
+
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pv-test-app
+  labels:
+    app: pv-test-app
+spec:
+  containers:
+    - name: app
+      image: nginx:alpine
+      volumeMounts:
+        - name: data-volume
+          mountPath: /usr/share/nginx/html
+        - name: script-volume
+          mountPath: /config-scripts
+  volumes:
+    - name: data-volume
+      persistentVolumeClaim:
+        claimName: local-pvc
+    - name: script-volume
+      configMap:
+        name: init-scripts
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-scripts
+data:
+  init.sh: |
+    #!/bin/sh
+    echo "Initialisation du stockage..." > /usr/share/nginx/html/index.html
+    echo "Date: $(date)" >> /usr/share/nginx/html/index.html
+    echo "Host: $(hostname)" >> /usr/share/nginx/html/index.html
+    echo "<br>" >> /usr/share/nginx/html/index.html
+    echo "<h3>Liste des fichiers: </h3>" >> /usr/share/nginx/html/index.html
+    ls -la /usr/share/nginx/html/ >> /usr/share/nginx/html/index.html
+  counter: |
+    #!/bin/sh
+    COUNTER_FILE="/usr/share/nginx/html/counter.txt"
+
+    if [ -f "$COUNTER_FILE" ]; then
+      COUNT=$(cat $COUNTER_FILE)
+      COUNT=$((COUNT + 1))
+    else
+      COUNT=1
+    fi
+
+    echo $COUNT > $COUNTER_FILE
+    echo "Compteur: $COUNT" >> /usr/share/nginx/html/index.html

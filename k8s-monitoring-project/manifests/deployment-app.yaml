@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: web-app
+  namespace: monitoring-project
+  labels:
+    app: web-app
+    tier: frontend
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+        tier: frontend
+    spec: 
+      containers:
+        - name: nginx
+          image: nginx:1.25
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.vonf
+              subPath: nginx.conf
+            - name: html-content
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+        - name: metrics-exporter
+          image: busybox:1.36
+          command: ['sh', '-c', 'while true; do echo "{\"timestamp\": \"$(date)\", \"service\": \"web-app\", \"status\": \"healthy\", \"requests_processed\": $RANDOM}" >> /metrics/metrics.json; sleep 30; done']
+          volumeMounts:
+            - name: metrics-volume
+              mountPath: /metrics
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: app-config
+            items:
+              - key: nginx.conf
+                path: nginx.conf
+        - name: html-content
+          configMap:  
+            name: app-config
+        - name: metrics-volume
+          emptyDir: {}
+            
+
+
+
