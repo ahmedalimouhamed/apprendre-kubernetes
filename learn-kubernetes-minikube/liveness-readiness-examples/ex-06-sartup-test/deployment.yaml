@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-startup
+spec:
+  selector:
+    matchLabels:
+      app: test-startup
+  template:
+    metadata:
+      labels:
+        app: test-startup
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command: ["sh", "-c", "sleep 20 && touch /tmp/app-started && sleep 3600"]
+          volumeMounts:
+            - name: startup
+              mountPath: /health
+
+          startupProbe:
+            exec: 
+              command: ["sh", "/health/startup-test.sh"]
+            failureThreshold: 30
+            periodSeconds: 2
+
+          livenessProbe:
+            exec:
+              command: ["sh", "/health/startup-test.sh"]
+            periodSeconds: 5
+
+      volumes:
+        - name: startup
+          configMap:
+            name: startup-config
+            
+          

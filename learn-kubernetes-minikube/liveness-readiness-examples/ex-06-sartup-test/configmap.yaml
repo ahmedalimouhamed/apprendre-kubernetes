@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: startup-config
+data:
+  startup-test.sh: |
+    #!/bin/sh
+    if [ -f /tmp/app-started ]; then
+      exit 0
+    else
+      exit 1
+    fi

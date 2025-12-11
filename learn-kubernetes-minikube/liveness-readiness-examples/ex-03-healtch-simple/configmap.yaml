@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: health-app-config
+data:
+  app.py: |
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    import time
+
+    is_healthy = True
+    is_ready = False
+
+    class HealthHandler(BaseHTTPRequestHandler):
+      def do_GET(self):
+        global is_healthy, is_ready
+
+        if self.path == '/':
+          self.send_response(200)
+          self.send_header('Content-type', 'text/html')
+          self.end_headers()
+          self.wfile.write(b'<h1>Hello kubernetes!</h1><p>Health: OK</p>')
+        elif self.path == '/health':
+          if is_healthy:
+            self.send_response(200)
+            self.wfile.write(b'OK')
+          else:
+            self.send_response(500)
+            self.wfile.write(b'unhealthy')
+        elif self.path == '/ready':
+          if is_ready:
+            self.send_response(200)
+            self.wfile.write(b'READY')
+          else:
+            self.send_response(503)
+            self.wfile.write(b'Not Ready')
+        elif self.path == '/toggle/health':
+          is_healthy = not is_healthy
+          status = "Sain" if is_healthy else "Malade"
+          self.send_response(200)
+          self.wfile.write(f'Ready: {status}'.encode())
+        else:
+          self.send_response(404)
+          self.wfile.write(b'Not Found')
+
+    print ("Démarrage de l'application...")
+    time.sleep(5)
+    is_ready = True
+    print ("L'application est prête.")
+
+    server = HTTPServer(('0.0.0.0', 8081), HealthHandler)
+    print("Serveur HTTP démarré sur le port 8081")
+    server.serve_forever()

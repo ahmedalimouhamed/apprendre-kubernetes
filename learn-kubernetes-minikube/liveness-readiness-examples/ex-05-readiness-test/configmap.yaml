@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: readiness-config
+data:
+  readiness-test.sh: |
+    #!/bin/sh
+    if [ -f /tmp/ready ]; then
+      exit 0
+    else
+      exit 1
+    fi

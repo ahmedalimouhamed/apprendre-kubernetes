@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: health-config
+data:
+  liveness-script.sh: |
+    #!/bin/sh
+    # Vérifie si l'application est en vie
+    if [ -f /tmp/healthy ]; then
+      echo "Liveness: Application saine"
+      exit 0
+    else
+      echo "Liveness: Application malade"
+      exit 1
+    fi
+  
+  readiness-script.sh: |
+    #!/bin/sh
+    # Vérifie si l'application est prête
+    if [ -f /tmp/ready ]; then
+      echo "Readiness: Application prête"
+      exit 0
+    else
+      echo "Readiness: Application non prête"
+      exit 1
+    fi
+  
+  app-script.sh: |
+    #!/bin/sh
+    echo "Démarrage de l'application..."
+    
+    # Créer le fichier healthy IMMÉDIATEMENT
+    touch /tmp/healthy
+    echo "Fichier healthy créé"
+    
+    # Créer le fichier ready après 10s
+    sleep 10
+    touch /tmp/ready
+    echo "Application prête à servir"
+    
+    # Simuler un problème après 30s
+    sleep 20  # 10s (attente ready) + 20s = 30s total
+    echo "Simulation de problème..."
+    rm -f /tmp/healthy
+    echo "Fichier healthy supprimé - la liveness probe va échouer"
+    
+    # Garder le container en vie pour observer
+    while true; do
+      echo "Container toujours en cours d'exécution..."
+      sleep 10
+    done
+  
+  app-config.properties: |
+    app.name=health-check-demo
+    app.version=1.0.0
+    health-check.interval=5s

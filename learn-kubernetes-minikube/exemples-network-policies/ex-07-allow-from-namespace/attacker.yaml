@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: attacker
+  labels:
+    app: attacker
+  namespace: attacker-ns
+spec:
+  containers:
+    - name: attacker
+      image: byrnedo/alpine-curl
+      command: ["sh", "-c", "while true; do sleep 30; done"]

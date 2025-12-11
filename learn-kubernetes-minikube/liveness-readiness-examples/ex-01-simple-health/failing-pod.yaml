@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: failing-app
+spec:
+  containers:
+    - name: failing-conainer
+      image: alpine:latest
+      command: ["/bin/sh", "-c"]
+      args: 
+        - |
+          echo "Application démarre..."
+          sleep 30
+          echo "Application crash intentionnellemnt"
+          exit 1
+
+      livenessProbe:
+        exec:
+          command: ["echo", "healthy"]
+        initialDelaySeconds: 5
+        periodSeconds: 5

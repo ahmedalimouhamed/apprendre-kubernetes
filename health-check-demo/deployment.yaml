@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: health-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: health-app
+  template:
+    metadata: 
+      labels:
+        app: health-app
+    spec:
+      containers:
+        - name: health-container
+          image: alpine:latest
+          command: ["/bin/sh"]
+          args: ["-c", "chmod +x /scripts/*.sh && /scripts/app-script.sh"]
+
+          livenessProbe:
+            exec:
+              command: 
+                - sh
+                - /scripts/liveness-script.sh
+            initialDelaySeconds: 15
+            periodSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 2
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - /scripts/readiness-script.sh
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 1
+            successThreshold: 1
+            timeoutSeconds: 2
+
+          volumeMounts:
+            - name: scripts-volume
+              mountPath: /scripts
+            - name: config-volume
+              mountPath: /config
+            - name: tmp-volume
+              mountPath: /tmp
+
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+
+      volumes:
+        - name: scripts-volume
+          configMap:
+            name: health-config
+            defaultMode: 0777
+        - name: config-volume
+          configMap:
+            name: health-config
+            items:
+              - key: app-config.properties
+                path: application.properties
+        - name: tmp-volume
+          emptyDir: {}

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-readiness
+spec:
+  selector:
+    matchLabels:
+      app: test-readiness
+  template:
+    metadata:
+      labels:
+        app: test-readiness
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command: ["sh", "-c", "sleep 3600"]
+          volumeMounts:
+            - name: readiness
+              mountPath: /health
+
+          readinessProbe:
+            exec:
+              command: ["sh", "/health/readiness-test.sh"]
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 2
+            
+
+      volumes:
+        - name: readiness
+          configMap:
+            name: readiness-config

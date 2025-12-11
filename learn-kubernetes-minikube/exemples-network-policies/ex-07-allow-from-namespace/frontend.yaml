@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+  namespace: frontend-ns
+spec:
+  containers:
+    - name: frontend
+      image: byrnedo/alpine-curl
+      command: ["sh", "-c", "while true; do sleep 30; done"]
